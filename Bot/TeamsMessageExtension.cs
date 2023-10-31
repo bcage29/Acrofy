@@ -1,4 +1,5 @@
-﻿using Microsoft.Bot.Builder;
+﻿using System.Net.Http.Headers;
+using Microsoft.Bot.Builder;
 using Microsoft.Bot.Builder.Teams;
 using Microsoft.Bot.Schema;
 using Microsoft.Bot.Schema.Teams;
@@ -17,8 +18,6 @@ public class TeamsMessageExtension : TeamsActivityHandler
         {
             case "createCard":
                 return Task.FromResult(CreateCardCommand(turnContext, action));
-            case "shareMessage":
-                return Task.FromResult(ShareMessageCommand(turnContext, action));
         }
         return Task.FromResult(new MessagingExtensionActionResponse());
     }
@@ -50,51 +49,6 @@ public class TeamsMessageExtension : TeamsActivityHandler
                 AttachmentLayout = "list",
                 Type = "result",
                 Attachments = attachments,
-            },
-        };
-    }
-
-    private MessagingExtensionActionResponse ShareMessageCommand(ITurnContext<IInvokeActivity> turnContext, MessagingExtensionAction action)
-    {
-        // The user has chosen to share a message by choosing the 'Share Message' context menu command.
-        var heroCard = new HeroCard
-        {
-            Title = $"{action.MessagePayload.From?.User?.DisplayName} originally sent this message:",
-            Text = action.MessagePayload.Body.Content,
-        };
-
-        if (action.MessagePayload.Attachments != null && action.MessagePayload.Attachments.Count > 0)
-        {
-            // This sample does not add the MessagePayload Attachments.
-            heroCard.Subtitle = $"({action.MessagePayload.Attachments.Count} Attachments not included)";
-        }
-
-        // This Message Extension example allows the user to check a box to include an image with the
-        // shared message.  This demonstrates sending custom parameters along with the message payload.
-        var includeImage = ((JObject)action.Data)["includeImage"]?.ToString();
-        if (string.Equals(includeImage, bool.TrueString, StringComparison.OrdinalIgnoreCase))
-        {
-            heroCard.Images = new List<CardImage>
-                {
-                    new CardImage { Url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQtB3AwMUeNoq4gUBGe6Ocj8kyh3bXa9ZbV7u1fVKQoyKFHdkqU" },
-                };
-        }
-
-        return new MessagingExtensionActionResponse
-        {
-            ComposeExtension = new MessagingExtensionResult
-            {
-                Type = "result",
-                AttachmentLayout = "list",
-                Attachments = new List<MessagingExtensionAttachment>()
-                    {
-                        new MessagingExtensionAttachment
-                        {
-                            Content = heroCard,
-                            ContentType = HeroCard.ContentType,
-                            Preview = heroCard.ToAttachment(),
-                        },
-                    },
             },
         };
     }
@@ -184,30 +138,18 @@ public class TeamsMessageExtension : TeamsActivityHandler
         return obj["data"].Select(item => (item["id"].ToString(), item["version"].ToString(), item["description"].ToString(), item["projectUrl"]?.ToString(), item["iconUrl"]?.ToString()));
     }
 
-    // Link Unfurling.
-    protected override Task<MessagingExtensionResponse> OnTeamsAppBasedLinkQueryAsync(ITurnContext<IInvokeActivity> turnContext, AppBasedLinkQuery query, CancellationToken cancellationToken)
+    private async Task FindAcronyms(string text)
     {
-        var heroCard = new ThumbnailCard
-        {
-            Title = "Thumbnail Card",
-            Text = query.Url,
-            Images = new List<CardImage> { new CardImage("https://raw.githubusercontent.com/microsoft/botframework-sdk/master/icon.png") },
-        };
+        //var graphClient = new GraphServiceClient()
+        text = text.ToUpper();
+        var acronymListUrl = "https://graph.microsoft.com/v1.0/sites/fa047178-d741-4117-9bc4-dca6c91b2b77/lists/1e78f375-9192-4515-af6e-964866bde52a/items?expand=fields(select=Title,Definition,Description)";
+        var httpClient = new HttpClient();
+        httpClient.DefaultRequestHeaders.Authorization =
+            new AuthenticationHeaderValue("Bearer", "Your Oauth token");
 
-        // By default the link unfurling result is cached in Teams for 30 minutes.
-        // The code has set a cache policy and removed the cache for the app. Learn more here: https://learn.microsoft.com/microsoftteams/platform/messaging-extensions/how-to/link-unfurling?tabs=dotnet%2Cadvantages#remove-link-unfurling-cache
-        var action = new CardAction
-        {
-            Type = "setCachePolicy",
-            Value = "{\"type\":\"no-cache\"}",
-        };
-
-        var attachments = new MessagingExtensionAttachment(HeroCard.ContentType, null, heroCard);
-        var suggestedActions = new MessagingExtensionSuggestedAction(new[] { action });
-        var result = new MessagingExtensionResult("list", "result", new[] { attachments }, suggestedActions);
-        return Task.FromResult(new MessagingExtensionResponse(result));
+        var response = await httpClient.GetAsync(acronymListUrl);
+        
     }
-
     internal class CardResponse
     {
         public string Title { get; set; }
