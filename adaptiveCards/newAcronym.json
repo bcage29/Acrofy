@@ -1,0 +1,45 @@
+{
+    "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+    "type": "AdaptiveCard",
+    "version": "1.6",
+    "body": [
+        {
+            "type": "TextBlock",
+            "size": "Large",
+            "weight": "Bolder",
+            "text": "Request an Acronym",
+            "horizontalAlignment": "Left",
+            "wrap": true,
+            "style": "heading",
+            "spacing": "Large"
+        },
+        {
+            "type": "Input.Text",
+            "label": "Title",
+            "id": "title",
+            "isRequired": true,
+            "errorMessage": "Title is required",
+            "placeholder": "What is the acronym you would like to add?"
+        },
+        {
+            "type": "Input.Text",
+            "label": "Definition",
+            "id": "definition",
+            "isRequired": true,
+            "errorMessage": "Definition is required",
+            "placeholder": "What is the definition of your acronym?"
+        },
+        {
+            "type": "Input.Text",
+            "label": "Description",
+            "id": "description",
+            "placeholder": "What is the description of your acronym?"
+        }
+    ],
+    "actions": [
+        {
+            "type": "Action.Submit",
+            "title": "Submit"
+        }
+    ]
+}
