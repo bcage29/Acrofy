@@ -23,7 +23,6 @@ public class BotController : ControllerBase
     [HttpPost, HttpGet]
     public async Task PostAsync()
     {
-        Console.WriteLine("hit");
         // Delegate the processing of the HTTP POST to the adapter.
         // The adapter will invoke the bot.
         await Adapter.ProcessAsync(Request, Response, Bot);

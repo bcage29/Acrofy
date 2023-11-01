@@ -7,7 +7,7 @@
             "type": "TextBlock",
             "size": "Large",
             "weight": "Bolder",
-            "text": "Request an Acronym",
+            "text": "Request a new Acronym",
             "horizontalAlignment": "Left",
             "wrap": true,
             "style": "heading",
@@ -38,7 +38,7 @@
     ],
     "actions": [
         {
-            "type": "Action.Submit",
+            "type": "Action.Execute",
             "title": "Submit"
         }
     ]
